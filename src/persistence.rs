@@ -12,8 +12,8 @@ pub fn dump<
     folder_path: &Path,
 ) -> Result<(), Box<dyn Error>> {
     let file_path = io::dump(folder_path, &Node::collect(root_node))?;
-    fs::rename(file_path, &folder_path.join("full_dump.json"))?;
-    io::remove_dir(&folder_path.join("commit"))
+    fs::rename(file_path, &folder_path.join(super::DUMP_FILE_PATH))?;
+    io::remove_dir(&folder_path.join(super::WAL_FOLDER_PATH))
 }
 
 pub fn load<
@@ -24,20 +24,16 @@ pub fn load<
     fan_out: usize,
 ) -> Result<RootNode<K, V>, Box<dyn Error>> {
     let mut root_node = RootNode::<K, V>::new(fan_out);
-    let kv_series: Vec<(K, V)> = io::load(&folder_path.join("full_dump.json"))?;
+    let kv_series: Vec<(K, V)> = io::load(&folder_path.join(super::DUMP_FILE_PATH))?;
 
     for (key, value) in kv_series.into_iter() {
         root_node = root_node.insert(&key, value, false)?;
     }
 
-    match fs::read_dir(&folder_path.join("commit")) {
+    match fs::read_dir(&folder_path.join(super::WAL_FOLDER_PATH)) {
         Ok(dir) => {
             let mut entries = dir
-                .map(|res| {
-                    res.map(|e| {
-                        e.path()
-                    })
-                })
+                .map(|res| res.map(|e| e.path()))
                 .collect::<Result<Vec<_>, std::io::Error>>()?;
             entries.sort();
 

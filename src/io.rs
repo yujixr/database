@@ -77,7 +77,7 @@ where
 }
 
 pub fn remove_dir(folder_path: &Path) -> Result<(), Box<dyn Error>> {
-    if let Err(e) = fs::remove_dir_all(&folder_path.join("commit")) {
+    if let Err(e) = fs::remove_dir_all(&folder_path) {
         if let std::io::ErrorKind::NotFound = e.kind() {
             Ok(())
         } else {

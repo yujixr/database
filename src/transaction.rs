@@ -152,7 +152,7 @@ where
     pub fn abort(self) {}
 
     fn write_log(&self, folder_path: &Path) -> Result<(), Box<dyn Error>> {
-        io::dump(&folder_path.join("commit"), &self.write_set)?;
+        io::dump(&folder_path.join(super::WAL_FOLDER_PATH), &self.write_set)?;
         Ok(())
     }
 }
