@@ -12,8 +12,8 @@ impl<K, V> LeafNode<K, V> {
 
 impl<K, V> Node<K, V> for LeafNode<K, V>
 where
-    K: 'static + Debug + Clone + Ord,
-    V: 'static + Debug + Clone,
+    K: 'static + fmt::Debug + Clone + Ord,
+    V: 'static + fmt::Debug + Clone,
 {
     fn find(&self, key: &K) -> Option<&V> {
         match self.kv_series.binary_search_by_key(&key, |(key, _)| key) {

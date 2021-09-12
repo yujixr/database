@@ -2,10 +2,9 @@ use super::io;
 use super::node::{Node, RootNode};
 use core::hash::Hash;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Debug, path::Path};
-use thiserror::Error;
+use std::{collections::HashMap, error::Error, fmt, path::Path};
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum TransactionError {
     #[error("target key not found; transaction aborted")]
     KeyNotFound,
@@ -13,8 +12,8 @@ pub enum TransactionError {
 
 pub struct Transaction<'a, K, V>
 where
-    K: Debug,
-    V: Debug,
+    K: fmt::Debug,
+    V: fmt::Debug,
 {
     write_set: HashMap<K, Write<V>>,
     root_node: &'a RootNode<K, V>,
@@ -36,8 +35,8 @@ pub enum Write<V> {
 
 impl<K, V> Transaction<'_, K, V>
 where
-    K: 'static + Debug + Clone + Serialize + Hash + Ord,
-    V: 'static + Debug + Clone + Serialize,
+    K: 'static + fmt::Debug + Clone + Serialize + Hash + Ord,
+    V: 'static + fmt::Debug + Clone + Serialize,
 {
     pub fn new(root_node: &RootNode<K, V>) -> Transaction<K, V> {
         let write_set = HashMap::new();
@@ -47,7 +46,7 @@ where
         }
     }
 
-    pub fn exec(&mut self, req: Request<K, V>) -> Result<Option<V>, Box<dyn std::error::Error>> {
+    pub fn exec(&mut self, req: Request<K, V>) -> Result<Option<V>, Box<dyn Error>> {
         Ok(match req {
             Request::Find(key) => {
                 if let Some(w) = self.write_set.get(&key) {
@@ -114,10 +113,8 @@ where
     pub fn commit(
         self,
         folder_path: &Path,
-    ) -> Result<
-        Box<dyn Fn(RootNode<K, V>) -> Result<RootNode<K, V>, Box<dyn std::error::Error>>>,
-        Box<dyn std::error::Error>,
-    > {
+    ) -> Result<Box<dyn Fn(RootNode<K, V>) -> Result<RootNode<K, V>, Box<dyn Error>>>, Box<dyn Error>>
+    {
         if self.write_set.len() == 0 {
             Ok(Box::new(|root_node| Ok(root_node)))
         } else {
@@ -154,7 +151,7 @@ where
 
     pub fn abort(self) {}
 
-    fn write_log(&self, folder_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    fn write_log(&self, folder_path: &Path) -> Result<(), Box<dyn Error>> {
         io::dump(&folder_path.join("./commit"), &self.write_set)?;
         Ok(())
     }

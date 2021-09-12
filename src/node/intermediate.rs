@@ -1,18 +1,13 @@
 use super::*;
 use std::{cmp::max, fmt};
 
-pub struct IntermediateNode<K, V>
-where
-    K: fmt::Debug,
-    V: fmt::Debug,
-{
+pub struct IntermediateNode<K, V> {
     children: Vec<(K, Box<dyn Node<K, V>>)>,
 }
 
 impl<K, V> IntermediateNode<K, V>
 where
-    K: fmt::Debug + Clone + Ord,
-    V: fmt::Debug + Clone,
+    K: Ord,
 {
     pub fn new(children: Vec<(K, Box<dyn Node<K, V>>)>) -> Self {
         IntermediateNode { children }

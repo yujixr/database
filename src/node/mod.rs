@@ -1,5 +1,4 @@
-use std::fmt::{self, Debug};
-use thiserror::Error;
+use std::fmt;
 
 use intermediate::IntermediateNode;
 use leaf::LeafNode;
@@ -11,11 +10,11 @@ mod root;
 
 const N: usize = 10;
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum NodeError<K, V>
 where
-    K: Debug,
-    V: Debug,
+    K: fmt::Debug,
+    V: fmt::Debug,
 {
     #[error("node overflowed")]
     Overflow((K, K, Box<dyn Node<K, V>>)),
@@ -31,8 +30,8 @@ where
 
 pub trait Node<K, V>
 where
-    K: Debug,
-    V: Debug,
+    K: fmt::Debug,
+    V: fmt::Debug,
 {
     fn find(&self, key: &K) -> Option<&V>;
     fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V>>;
@@ -41,7 +40,7 @@ where
     fn collect(&self) -> Vec<(K, V)>;
 }
 
-impl<K, V> Debug for dyn Node<K, V> {
+impl<K, V> fmt::Debug for dyn Node<K, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "node")?;
         Ok(())

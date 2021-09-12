@@ -2,16 +2,16 @@ use super::*;
 
 pub struct RootNode<K, V>
 where
-    K: Debug,
-    V: Debug,
+    K: fmt::Debug,
+    V: fmt::Debug,
 {
     root: IntermediateNode<K, V>,
 }
 
 impl<K, V> RootNode<K, V>
 where
-    K: 'static + Debug + Clone + Ord,
-    V: 'static + Debug + Clone,
+    K: 'static + fmt::Debug + Clone + Ord,
+    V: 'static + fmt::Debug + Clone,
 {
     pub fn new() -> Self {
         RootNode {
@@ -44,8 +44,8 @@ where
 
 impl<K, V> Node<K, V> for RootNode<K, V>
 where
-    K: 'static + Debug + Clone + Ord,
-    V: 'static + Debug + Clone,
+    K: 'static + fmt::Debug + Clone + Ord,
+    V: 'static + fmt::Debug + Clone,
 {
     fn find(&self, key: &K) -> Option<&V> {
         self.root.find(key)

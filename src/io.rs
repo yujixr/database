@@ -1,15 +1,15 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use serde::{de::DeserializeOwned, Serialize};
-use sha2::{Digest, Sha512};
+use sha2::{self, Digest};
 use std::{
+    error::Error,
     fs, io,
     io::Read,
     path::{Path, PathBuf},
     time::SystemTime,
 };
-use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum IOError {
     #[error("hash is not matched")]
     HashMismatch,
@@ -17,7 +17,7 @@ pub enum IOError {
     FileSizeMismatch,
 }
 
-fn now() -> Result<u128, Box<dyn std::error::Error>> {
+fn now() -> Result<u128, Box<dyn Error>> {
     Ok(SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)?
         .as_nanos())
@@ -27,12 +27,12 @@ fn hash<T>(value: T) -> Vec<u8>
 where
     T: AsRef<[u8]>,
 {
-    let mut hasher = Sha512::new();
+    let mut hasher = sha2::Sha512::new();
     hasher.update(&value);
     hasher.finalize().as_ref().to_vec()
 }
 
-pub fn dump<T>(folder_path: &Path, value: &T) -> Result<PathBuf, Box<dyn std::error::Error>>
+pub fn dump<T>(folder_path: &Path, value: &T) -> Result<PathBuf, Box<dyn Error>>
 where
     T: ?Sized + Serialize,
 {
@@ -52,7 +52,7 @@ where
     Ok(file_path)
 }
 
-pub fn load<T>(file_path: &Path) -> Result<T, Box<dyn std::error::Error>>
+pub fn load<T>(file_path: &Path) -> Result<T, Box<dyn Error>>
 where
     T: DeserializeOwned,
 {
@@ -76,7 +76,7 @@ where
     }
 }
 
-pub fn remove_dir(folder_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+pub fn remove_dir(folder_path: &Path) -> Result<(), Box<dyn Error>> {
     if let Err(e) = fs::remove_dir_all(&folder_path.join("./commit")) {
         if let std::io::ErrorKind::NotFound = e.kind() {
             Ok(())
