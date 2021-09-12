@@ -2,6 +2,7 @@ use super::*;
 use std::{cmp::max, fmt};
 
 pub struct IntermediateNode<K, V> {
+    fan_out: usize,
     children: Vec<(K, Box<dyn Node<K, V>>)>,
 }
 
@@ -9,8 +10,8 @@ impl<K, V> IntermediateNode<K, V>
 where
     K: Ord,
 {
-    pub fn new(children: Vec<(K, Box<dyn Node<K, V>>)>) -> Self {
-        IntermediateNode { children }
+    pub fn new(fan_out: usize, children: Vec<(K, Box<dyn Node<K, V>>)>) -> Self {
+        IntermediateNode { fan_out, children }
     }
 
     fn get_child_index(&self, key: &K) -> usize {
@@ -60,7 +61,7 @@ where
                     let idx = self.get_child_index(&first_last_key);
                     self.children
                         .insert(idx + 1, (second_last_key, second_node));
-                    if self.children.len() > N + 1 {
+                    if self.children.len() > self.fan_out + 1 {
                         let second_kv_series =
                             self.children.split_off((self.children.len() + 1) / 2);
                         let second_last_key =
@@ -72,6 +73,7 @@ where
                             first_last_key,
                             second_last_key,
                             Box::new(IntermediateNode {
+                                fan_out: self.fan_out,
                                 children: second_kv_series,
                             }),
                         )))
@@ -86,7 +88,7 @@ where
                 if self.children.len() == 0 {
                     self.children = vec![(
                         key.clone(),
-                        Box::new(LeafNode::new(vec![(key.clone(), value)])),
+                        Box::new(LeafNode::new(self.fan_out, vec![(key.clone(), value)])),
                     )];
                     Ok(())
                 } else {

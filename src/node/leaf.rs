@@ -1,12 +1,13 @@
 use super::*;
 
 pub struct LeafNode<K, V> {
+    fan_out: usize,
     kv_series: Vec<(K, V)>,
 }
 
 impl<K, V> LeafNode<K, V> {
-    pub fn new(kv_series: Vec<(K, V)>) -> Self {
-        LeafNode { kv_series }
+    pub fn new(fan_out: usize, kv_series: Vec<(K, V)>) -> Self {
+        LeafNode { fan_out, kv_series }
     }
 }
 
@@ -46,7 +47,7 @@ where
             }
         };
 
-        if self.kv_series.len() > N {
+        if self.kv_series.len() > self.fan_out {
             let second_kv_series = self.kv_series.split_off((self.kv_series.len() + 1) / 2);
             let second_last_key = second_kv_series.last().ok_or(NodeError::Unknown)?.0.clone();
             let first_last_key = self.kv_series.last().ok_or(NodeError::Unknown)?.0.clone();
@@ -55,6 +56,7 @@ where
                 first_last_key,
                 second_last_key,
                 Box::new(LeafNode {
+                    fan_out: self.fan_out,
                     kv_series: second_kv_series,
                 }),
             )))

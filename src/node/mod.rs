@@ -8,8 +8,6 @@ mod intermediate;
 mod leaf;
 mod root;
 
-const N: usize = 10;
-
 #[derive(thiserror::Error, Debug)]
 pub enum NodeError<K, V>
 where

@@ -21,8 +21,9 @@ pub fn load<
     V: 'static + fmt::Debug + Clone + Serialize + DeserializeOwned,
 >(
     folder_path: &Path,
+    fan_out: usize,
 ) -> Result<RootNode<K, V>, Box<dyn Error>> {
-    let mut root_node = RootNode::<K, V>::new();
+    let mut root_node = RootNode::<K, V>::new(fan_out);
     let kv_series: Vec<(K, V)> = io::load(&folder_path.join("./full_dump.json"))?;
 
     for (key, value) in kv_series.into_iter() {

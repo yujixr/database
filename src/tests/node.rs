@@ -1,6 +1,6 @@
 #[test]
 fn node_insert() -> Result<(), Box<dyn std::error::Error>> {
-    let mut index = crate::RootNode::new();
+    let mut index = crate::RootNode::new(10);
     index = index.insert(&"key", "value", false)?;
     assert_eq!(crate::Node::find(&index, &"key"), Some(&"value"));
     Ok(())
@@ -8,7 +8,7 @@ fn node_insert() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn node_update() -> Result<(), Box<dyn std::error::Error>> {
-    let mut index = crate::RootNode::new();
+    let mut index = crate::RootNode::new(10);
     index = index.insert(&"key", "value", false)?;
     crate::Node::update(&mut index, &"key", "value_updated")?;
     assert_eq!(crate::Node::find(&index, &"key"), Some(&"value_updated"));
@@ -17,7 +17,7 @@ fn node_update() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn node_remove() -> Result<(), Box<dyn std::error::Error>> {
-    let mut index = crate::RootNode::new();
+    let mut index = crate::RootNode::new(10);
     index = index.insert(&"key", "value", false)?;
     crate::Node::remove(&mut index, &"key")?;
     assert_eq!(crate::Node::find(&index, &"key"), None);
@@ -26,7 +26,7 @@ fn node_remove() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn node_insert_many() -> Result<(), Box<dyn std::error::Error>> {
-    let mut index = crate::RootNode::new();
+    let mut index = crate::RootNode::new(10);
 
     for i in 0..1000 {
         let key = format!("key{}", i);
@@ -40,7 +40,7 @@ fn node_insert_many() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn node_remove_many() -> Result<(), Box<dyn std::error::Error>> {
-    let mut index = crate::RootNode::new();
+    let mut index = crate::RootNode::new(10);
 
     for i in 0..1000 {
         let key = format!("key{}", i);
@@ -65,7 +65,7 @@ fn node_remove_many() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn node_dump() -> Result<(), Box<dyn std::error::Error>> {
     crate::io::remove_dir(std::path::Path::new("./data"))?;
-    let mut index = crate::RootNode::new();
+    let mut index = crate::RootNode::new(10);
 
     for i in 0..1000 {
         let key = format!("key{}", i);
@@ -74,7 +74,7 @@ fn node_dump() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     crate::dump(&index, std::path::Path::new("./data"))?;
-    index = crate::load(std::path::Path::new("./data"))?;
+    index = crate::load(std::path::Path::new("./data"), 10)?;
 
     for i in 0..1000 {
         let key = format!("key{}", i);

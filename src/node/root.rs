@@ -5,6 +5,7 @@ where
     K: fmt::Debug,
     V: fmt::Debug,
 {
+    fan_out: usize,
     root: IntermediateNode<K, V>,
 }
 
@@ -13,9 +14,10 @@ where
     K: 'static + fmt::Debug + Clone + Ord,
     V: 'static + fmt::Debug + Clone,
 {
-    pub fn new() -> Self {
+    pub fn new(fan_out: usize) -> Self {
         RootNode {
-            root: IntermediateNode::new(Vec::new()),
+            fan_out,
+            root: IntermediateNode::new(fan_out, Vec::new()),
         }
     }
 
@@ -28,14 +30,21 @@ where
         let result = self.root.insert(key, value, allow_upsert);
         if let Err(NodeError::Overflow((first_last_key, second_last_key, second_node))) = result {
             Ok(RootNode {
-                root: IntermediateNode::new(vec![
-                    (first_last_key, Box::new(self.root)),
-                    (second_last_key, second_node),
-                ]),
+                fan_out: self.fan_out,
+                root: IntermediateNode::new(
+                    self.fan_out,
+                    vec![
+                        (first_last_key, Box::new(self.root)),
+                        (second_last_key, second_node),
+                    ],
+                ),
             })
         } else {
             match result {
-                Ok(_) => Ok(RootNode { root: self.root }),
+                Ok(_) => Ok(RootNode {
+                    fan_out: self.fan_out,
+                    root: self.root,
+                }),
                 Err(e) => Err(e),
             }
         }

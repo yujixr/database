@@ -1,6 +1,6 @@
 #[test]
 fn transaction_without_commit() -> Result<(), Box<dyn std::error::Error>> {
-    let root_node = crate::RootNode::new();
+    let root_node = crate::RootNode::new(10);
     let mut transaction = crate::Transaction::new(&root_node);
     assert_eq!(
         transaction.exec(crate::Request::Insert((
@@ -18,7 +18,7 @@ fn transaction_without_commit() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn transaction_with_commit() -> Result<(), Box<dyn std::error::Error>> {
-    let mut root_node = crate::RootNode::new();
+    let mut root_node = crate::RootNode::new(10);
 
     let mut transaction = crate::Transaction::new(&root_node);
     assert_eq!(
@@ -42,7 +42,7 @@ fn transaction_with_commit() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn transaction_update() -> Result<(), Box<dyn std::error::Error>> {
-    let mut root_node = crate::RootNode::new();
+    let mut root_node = crate::RootNode::new(10);
 
     let mut transaction = crate::Transaction::new(&root_node);
     assert_eq!(
@@ -73,7 +73,7 @@ fn transaction_update() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn transaction_remove() -> Result<(), Box<dyn std::error::Error>> {
-    let mut root_node = crate::RootNode::new();
+    let mut root_node = crate::RootNode::new(10);
 
     let mut transaction = crate::Transaction::new(&root_node);
     assert_eq!(
@@ -101,7 +101,7 @@ fn transaction_remove() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn transaction_many() -> Result<(), Box<dyn std::error::Error>> {
-    let mut root_node = crate::RootNode::new();
+    let mut root_node = crate::RootNode::new(10);
 
     for i in 0..1000 {
         let key = format!("key{}", i);
@@ -130,7 +130,7 @@ fn transaction_many() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn transaction_persist() -> Result<(), Box<dyn std::error::Error>> {
     crate::io::remove_dir(std::path::Path::new("./data"))?;
-    let mut root_node = crate::RootNode::new();
+    let mut root_node = crate::RootNode::new(10);
 
     for i in 0..100 {
         let key = format!("key{}", i);
@@ -157,7 +157,7 @@ fn transaction_persist() -> Result<(), Box<dyn std::error::Error>> {
         root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
     }
 
-    root_node = crate::load(std::path::Path::new("./data"))?;
+    root_node = crate::load(std::path::Path::new("./data"), 10)?;
     for i in 0..200 {
         let key = format!("key{}", i);
         let value = format!("value{}", i);
