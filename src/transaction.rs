@@ -132,16 +132,10 @@ where
 
             Ok(Box::new(move |mut root_node: RootNode<K, V>| {
                 for (key, w) in write_set.iter() {
-                    root_node = match w {
+                    match w {
                         Write::Insert(value) => root_node.insert(key, value.clone(), true),
-                        Write::Update(value) => {
-                            root_node.update(key, value.clone())?;
-                            Ok(root_node)
-                        }
-                        Write::Remove => {
-                            root_node.remove(key)?;
-                            Ok(root_node)
-                        }
+                        Write::Update(value) => root_node.update(key, value.clone()),
+                        Write::Remove => root_node.remove(key),
                     }?;
                 }
                 Ok(root_node)

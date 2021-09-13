@@ -20,35 +20,6 @@ where
             root: IntermediateNode::new(fan_out, Vec::new()),
         }
     }
-
-    pub fn insert(
-        mut self,
-        key: &K,
-        value: V,
-        allow_upsert: bool,
-    ) -> Result<RootNode<K, V>, NodeError<K, V>> {
-        let result = self.root.insert(key, value, allow_upsert);
-        if let Err(NodeError::Overflow((first_last_key, second_last_key, second_node))) = result {
-            Ok(RootNode {
-                fan_out: self.fan_out,
-                root: IntermediateNode::new(
-                    self.fan_out,
-                    vec![
-                        (first_last_key, Box::new(self.root)),
-                        (second_last_key, second_node),
-                    ],
-                ),
-            })
-        } else {
-            match result {
-                Ok(_) => Ok(RootNode {
-                    fan_out: self.fan_out,
-                    root: self.root,
-                }),
-                Err(e) => Err(e),
-            }
-        }
-    }
 }
 
 impl<K, V> Node<K, V> for RootNode<K, V>
@@ -60,8 +31,21 @@ where
         self.root.find(key)
     }
 
-    fn insert(&mut self, _: &K, _: V, _: bool) -> Result<(), NodeError<K, V>> {
-        Err(NodeError::NotSupported)
+    fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V>> {
+        let result = self.root.insert(key, value, allow_upsert);
+        if let Err(NodeError::Overflow((first_last_key, second_last_key, second_node))) = result {
+            let old_root = std::mem::take(self);
+            self.root = IntermediateNode::new(
+                self.fan_out,
+                vec![
+                    (first_last_key, Box::new(old_root.root)),
+                    (second_last_key, second_node),
+                ],
+            );
+        } else {
+            result?;
+        }
+        Ok(())
     }
 
     fn update(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V>> {
@@ -74,5 +58,15 @@ where
 
     fn collect(&self) -> Vec<(K, V)> {
         self.root.collect()
+    }
+}
+
+impl<K, V> Default for RootNode<K, V>
+where
+    K: 'static + fmt::Debug + Clone + Ord,
+    V: 'static + fmt::Debug + Clone,
+{
+    fn default() -> Self {
+        Self::new(10)
     }
 }
