@@ -16,7 +16,7 @@ where
     V: fmt::Debug,
 {
     write_set: HashMap<K, Write<V>>,
-    root_node: &'a RootNode<K, V>,
+    root_node: &'a mut RootNode<K, V>,
 }
 
 pub enum Request<K, V> {
@@ -38,7 +38,7 @@ where
     K: 'static + fmt::Debug + Clone + Serialize + Hash + Ord,
     V: 'static + fmt::Debug + Clone + Serialize,
 {
-    pub fn new(root_node: &RootNode<K, V>) -> Transaction<K, V> {
+    pub fn new(root_node: &mut RootNode<K, V>) -> Transaction<K, V> {
         let write_set = HashMap::new();
         Transaction {
             write_set,
@@ -110,14 +110,8 @@ where
         })
     }
 
-    pub fn commit(
-        self,
-        folder_path: &Path,
-    ) -> Result<Box<dyn Fn(RootNode<K, V>) -> Result<RootNode<K, V>, Box<dyn Error>>>, Box<dyn Error>>
-    {
-        if self.write_set.len() == 0 {
-            Ok(Box::new(|root_node| Ok(root_node)))
-        } else {
+    pub fn commit(self, folder_path: &Path) -> Result<(), Box<dyn Error>> {
+        if self.write_set.len() != 0 {
             for (key, w) in self.write_set.iter() {
                 if let Write::Insert(_) = w {
                 } else {
@@ -128,19 +122,16 @@ where
             }
 
             self.write_log(folder_path)?;
-            let write_set = self.write_set;
 
-            Ok(Box::new(move |mut root_node: RootNode<K, V>| {
-                for (key, w) in write_set.iter() {
-                    match w {
-                        Write::Insert(value) => root_node.insert(key, value.clone(), true),
-                        Write::Update(value) => root_node.update(key, value.clone()),
-                        Write::Remove => root_node.remove(key),
-                    }?;
-                }
-                Ok(root_node)
-            }))
+            for (key, w) in self.write_set.into_iter() {
+                match w {
+                    Write::Insert(value) => self.root_node.insert(&key, value, true),
+                    Write::Update(value) => self.root_node.update(&key, value),
+                    Write::Remove => self.root_node.remove(&key),
+                }?;
+            }
         }
+        Ok(())
     }
 
     pub fn abort(self) {}

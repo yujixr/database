@@ -1,7 +1,7 @@
 #[test]
 fn transaction_without_commit() -> Result<(), Box<dyn std::error::Error>> {
-    let root_node = crate::RootNode::new(10);
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut root_node = crate::RootNode::new(10);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Insert((
             "key".to_string(),
@@ -20,7 +20,7 @@ fn transaction_without_commit() -> Result<(), Box<dyn std::error::Error>> {
 fn transaction_with_commit() -> Result<(), Box<dyn std::error::Error>> {
     let mut root_node = crate::RootNode::new(10);
 
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Insert((
             "key".to_string(),
@@ -28,14 +28,14 @@ fn transaction_with_commit() -> Result<(), Box<dyn std::error::Error>> {
         )))?,
         None
     );
-    root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+    transaction.commit(std::path::Path::new("./data"))?;
 
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Find("key".to_string()))?,
         Some("value".to_string())
     );
-    transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+    transaction.commit(std::path::Path::new("./data"))?;
 
     Ok(())
 }
@@ -44,7 +44,7 @@ fn transaction_with_commit() -> Result<(), Box<dyn std::error::Error>> {
 fn transaction_update() -> Result<(), Box<dyn std::error::Error>> {
     let mut root_node = crate::RootNode::new(10);
 
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Insert((
             "key".to_string(),
@@ -52,9 +52,9 @@ fn transaction_update() -> Result<(), Box<dyn std::error::Error>> {
         )))?,
         None
     );
-    root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+    transaction.commit(std::path::Path::new("./data"))?;
 
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Update((
             "key".to_string(),
@@ -66,7 +66,7 @@ fn transaction_update() -> Result<(), Box<dyn std::error::Error>> {
         transaction.exec(crate::Request::Find("key".to_string()))?,
         Some("value_updated".to_string())
     );
-    transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+    transaction.commit(std::path::Path::new("./data"))?;
 
     Ok(())
 }
@@ -75,7 +75,7 @@ fn transaction_update() -> Result<(), Box<dyn std::error::Error>> {
 fn transaction_remove() -> Result<(), Box<dyn std::error::Error>> {
     let mut root_node = crate::RootNode::new(10);
 
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Insert((
             "key".to_string(),
@@ -83,9 +83,9 @@ fn transaction_remove() -> Result<(), Box<dyn std::error::Error>> {
         )))?,
         None
     );
-    root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+    transaction.commit(std::path::Path::new("./data"))?;
 
-    let mut transaction = crate::Transaction::new(&root_node);
+    let mut transaction = crate::Transaction::new(&mut root_node);
     assert_eq!(
         transaction.exec(crate::Request::Remove("key".to_string()))?,
         None
@@ -94,7 +94,7 @@ fn transaction_remove() -> Result<(), Box<dyn std::error::Error>> {
         transaction.exec(crate::Request::Find("key".to_string()))?,
         None
     );
-    transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+    transaction.commit(std::path::Path::new("./data"))?;
 
     Ok(())
 }
@@ -107,21 +107,21 @@ fn transaction_many() -> Result<(), Box<dyn std::error::Error>> {
         let key = format!("key{}", i);
         let value = format!("value{}", i);
 
-        let mut transaction = crate::Transaction::new(&root_node);
+        let mut transaction = crate::Transaction::new(&mut root_node);
         assert_eq!(
             transaction.exec(crate::Request::Insert((key, value)))?,
             None
         );
-        root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+        transaction.commit(std::path::Path::new("./data"))?;
     }
 
     for i in 0..1000 {
         let key = format!("key{}", i);
         let value = format!("value{}", i);
 
-        let mut transaction = crate::Transaction::new(&root_node);
+        let mut transaction = crate::Transaction::new(&mut root_node);
         assert_eq!(transaction.exec(crate::Request::Find(key))?, Some(value));
-        root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+        transaction.commit(std::path::Path::new("./data"))?;
     }
 
     Ok(())
@@ -136,12 +136,12 @@ fn transaction_persist() -> Result<(), Box<dyn std::error::Error>> {
         let key = format!("key{}", i);
         let value = format!("value{}", i);
 
-        let mut transaction = crate::Transaction::new(&root_node);
+        let mut transaction = crate::Transaction::new(&mut root_node);
         assert_eq!(
             transaction.exec(crate::Request::Insert((key, value)))?,
             None
         );
-        root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+        transaction.commit(std::path::Path::new("./data"))?;
     }
     crate::dump(&root_node, std::path::Path::new("./data"))?;
 
@@ -149,12 +149,12 @@ fn transaction_persist() -> Result<(), Box<dyn std::error::Error>> {
         let key = format!("key{}", i);
         let value = format!("value{}", i);
 
-        let mut transaction = crate::Transaction::new(&root_node);
+        let mut transaction = crate::Transaction::new(&mut root_node);
         assert_eq!(
             transaction.exec(crate::Request::Insert((key, value)))?,
             None
         );
-        root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+        transaction.commit(std::path::Path::new("./data"))?;
     }
 
     root_node = crate::load(std::path::Path::new("./data"), 10)?;
@@ -162,9 +162,9 @@ fn transaction_persist() -> Result<(), Box<dyn std::error::Error>> {
         let key = format!("key{}", i);
         let value = format!("value{}", i);
 
-        let mut transaction = crate::Transaction::new(&root_node);
+        let mut transaction = crate::Transaction::new(&mut root_node);
         assert_eq!(transaction.exec(crate::Request::Find(key))?, Some(value));
-        root_node = transaction.commit(std::path::Path::new("./data"))?(root_node)?;
+        transaction.commit(std::path::Path::new("./data"))?;
     }
 
     Ok(())
