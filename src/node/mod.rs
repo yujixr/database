@@ -20,8 +20,6 @@ where
     Duplicated,
     #[error("key not found")]
     NotFound,
-    #[error("operation not supported")]
-    NotSupported,
     #[error("unknown node error")]
     Unknown,
 }
