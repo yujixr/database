@@ -1,17 +1,16 @@
 use super::*;
 
-pub struct LeafNode<K, V> {
-    fan_out: usize,
+pub struct LeafNode<K, V, const N: usize> {
     kv_series: Vec<(K, V)>,
 }
 
-impl<K, V> LeafNode<K, V> {
-    pub fn new(fan_out: usize, kv_series: Vec<(K, V)>) -> Self {
-        LeafNode { fan_out, kv_series }
+impl<K, V, const N: usize> LeafNode<K, V, N> {
+    pub fn new(kv_series: Vec<(K, V)>) -> Self {
+        LeafNode { kv_series }
     }
 }
 
-impl<K, V> Node<K, V> for LeafNode<K, V>
+impl<K, V, const N: usize> Node<K, V, N> for LeafNode<K, V, N>
 where
     K: 'static + fmt::Debug + Clone + Ord,
     V: 'static + fmt::Debug + Clone,
@@ -26,7 +25,12 @@ where
         }
     }
 
-    fn insert(&mut self, key: &K, new_value: V, allow_upsert: bool) -> Result<(), NodeError<K, V>> {
+    fn insert(
+        &mut self,
+        key: &K,
+        new_value: V,
+        allow_upsert: bool,
+    ) -> Result<(), NodeError<K, V, N>> {
         let r = match self.kv_series.binary_search_by_key(&key, |(key, _)| key) {
             Ok(idx) => {
                 if allow_upsert {
@@ -47,7 +51,7 @@ where
             }
         };
 
-        if self.kv_series.len() > self.fan_out {
+        if self.kv_series.len() > N {
             let second_kv_series = self.kv_series.split_off((self.kv_series.len() + 1) / 2);
             let second_last_key = second_kv_series.last().ok_or(NodeError::Unknown)?.0.clone();
             let first_last_key = self.kv_series.last().ok_or(NodeError::Unknown)?.0.clone();
@@ -56,7 +60,6 @@ where
                 first_last_key,
                 second_last_key,
                 Box::new(LeafNode {
-                    fan_out: self.fan_out,
                     kv_series: second_kv_series,
                 }),
             )))
@@ -65,7 +68,7 @@ where
         }
     }
 
-    fn update(&mut self, key: &K, new_value: V) -> Result<(), NodeError<K, V>> {
+    fn update(&mut self, key: &K, new_value: V) -> Result<(), NodeError<K, V, N>> {
         match self.kv_series.binary_search_by_key(&key, |(key, _)| key) {
             Ok(idx) => match self.kv_series.get_mut(idx) {
                 Some((_, value)) => {
@@ -78,7 +81,7 @@ where
         }
     }
 
-    fn remove(&mut self, key: &K) -> Result<(), NodeError<K, V>> {
+    fn remove(&mut self, key: &K) -> Result<(), NodeError<K, V, N>> {
         match self.kv_series.binary_search_by_key(&key, |(key, _)| key) {
             Ok(idx) => {
                 self.kv_series.remove(idx);

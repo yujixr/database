@@ -7,8 +7,9 @@ use std::{collections::HashMap, error::Error, fmt, fs, hash::Hash, path::Path};
 pub fn dump<
     K: 'static + fmt::Debug + Clone + Serialize + Ord,
     V: 'static + fmt::Debug + Clone + Serialize,
+    const N: usize,
 >(
-    root_node: &RootNode<K, V>,
+    root_node: &RootNode<K, V, N>,
     folder_path: &Path,
 ) -> Result<(), Box<dyn Error>> {
     let file_path = io::dump(folder_path, &Node::collect(root_node))?;
@@ -19,11 +20,11 @@ pub fn dump<
 pub fn load<
     K: 'static + fmt::Debug + Clone + Serialize + DeserializeOwned + Ord + Hash,
     V: 'static + fmt::Debug + Clone + Serialize + DeserializeOwned,
+    const N: usize,
 >(
     folder_path: &Path,
-    fan_out: usize,
-) -> Result<RootNode<K, V>, Box<dyn Error>> {
-    let mut root_node = RootNode::<K, V>::new(fan_out);
+) -> Result<RootNode<K, V, N>, Box<dyn Error>> {
+    let mut root_node = RootNode::<K, V, N>::new();
     let kv_series: Vec<(K, V)> = io::load(&folder_path.join(super::DUMP_FILE_PATH))?;
 
     for (key, value) in kv_series.into_iter() {

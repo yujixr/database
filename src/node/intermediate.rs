@@ -1,17 +1,16 @@
 use super::*;
 use std::{cmp::max, fmt};
 
-pub struct IntermediateNode<K, V> {
-    fan_out: usize,
-    children: Vec<(K, Box<dyn Node<K, V>>)>,
+pub struct IntermediateNode<K, V, const N: usize> {
+    children: Vec<(K, Box<dyn Node<K, V, N>>)>,
 }
 
-impl<K, V> IntermediateNode<K, V>
+impl<K, V, const N: usize> IntermediateNode<K, V, N>
 where
     K: Ord,
 {
-    pub fn new(fan_out: usize, children: Vec<(K, Box<dyn Node<K, V>>)>) -> Self {
-        IntermediateNode { fan_out, children }
+    pub fn new(children: Vec<(K, Box<dyn Node<K, V, N>>)>) -> Self {
+        IntermediateNode { children }
     }
 
     fn get_child_index(&self, key: &K) -> usize {
@@ -20,7 +19,7 @@ where
             .map_or_else(|idx| idx, |idx| idx)
     }
 
-    fn get_child(&self, key: &K) -> Option<&(K, Box<dyn Node<K, V>>)> {
+    fn get_child(&self, key: &K) -> Option<&(K, Box<dyn Node<K, V, N>>)> {
         let idx = self.get_child_index(key);
         if idx == self.children.len() {
             self.children.last()
@@ -29,7 +28,7 @@ where
         }
     }
 
-    fn get_child_mut(&mut self, key: &K) -> Option<&mut (K, Box<dyn Node<K, V>>)> {
+    fn get_child_mut(&mut self, key: &K) -> Option<&mut (K, Box<dyn Node<K, V, N>>)> {
         let idx = self.get_child_index(key);
         if idx == self.children.len() {
             self.children.last_mut()
@@ -39,7 +38,7 @@ where
     }
 }
 
-impl<K, V> Node<K, V> for IntermediateNode<K, V>
+impl<K, V, const N: usize> Node<K, V, N> for IntermediateNode<K, V, N>
 where
     K: 'static + fmt::Debug + Clone + Ord,
     V: 'static + fmt::Debug + Clone,
@@ -48,7 +47,7 @@ where
         self.get_child(&key).map_or(None, |child| child.1.find(key))
     }
 
-    fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V>> {
+    fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V, N>> {
         match self.get_child_mut(&key) {
             Some(child) => {
                 let result = child.1.insert(&key, value, allow_upsert);
@@ -61,7 +60,7 @@ where
                     let idx = self.get_child_index(&first_last_key);
                     self.children
                         .insert(idx + 1, (second_last_key, second_node));
-                    if self.children.len() > self.fan_out + 1 {
+                    if self.children.len() > N + 1 {
                         let second_kv_series =
                             self.children.split_off((self.children.len() + 1) / 2);
                         let second_last_key =
@@ -73,7 +72,6 @@ where
                             first_last_key,
                             second_last_key,
                             Box::new(IntermediateNode {
-                                fan_out: self.fan_out,
                                 children: second_kv_series,
                             }),
                         )))
@@ -88,7 +86,7 @@ where
                 if self.children.len() == 0 {
                     self.children = vec![(
                         key.clone(),
-                        Box::new(LeafNode::new(self.fan_out, vec![(key.clone(), value)])),
+                        Box::new(LeafNode::new(vec![(key.clone(), value)])),
                     )];
                     Ok(())
                 } else {
@@ -98,14 +96,14 @@ where
         }
     }
 
-    fn update(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V>> {
+    fn update(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V, N>> {
         self.get_child_mut(&key)
             .ok_or(NodeError::NotFound)?
             .1
             .update(key, value)
     }
 
-    fn remove(&mut self, key: &K) -> Result<(), NodeError<K, V>> {
+    fn remove(&mut self, key: &K) -> Result<(), NodeError<K, V, N>> {
         self.get_child_mut(&key)
             .ok_or(NodeError::NotFound)?
             .1

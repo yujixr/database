@@ -10,13 +10,13 @@ pub enum TransactionError {
     KeyNotFound,
 }
 
-pub struct Transaction<'a, K, V>
+pub struct Transaction<'a, K, V, const N: usize>
 where
     K: fmt::Debug,
     V: fmt::Debug,
 {
     write_set: HashMap<K, Write<V>>,
-    root_node: &'a mut RootNode<K, V>,
+    root_node: &'a mut RootNode<K, V, N>,
 }
 
 pub enum Request<K, V> {
@@ -33,12 +33,12 @@ pub enum Write<V> {
     Remove,
 }
 
-impl<K, V> Transaction<'_, K, V>
+impl<K, V, const N: usize> Transaction<'_, K, V, N>
 where
     K: 'static + fmt::Debug + Clone + Serialize + Hash + Ord,
     V: 'static + fmt::Debug + Clone + Serialize,
 {
-    pub fn new(root_node: &mut RootNode<K, V>) -> Transaction<K, V> {
+    pub fn new(root_node: &mut RootNode<K, V, N>) -> Transaction<K, V, N> {
         let write_set = HashMap::new();
         Transaction {
             write_set,
