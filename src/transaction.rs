@@ -77,7 +77,11 @@ where
                         }
                     }
                 } else {
-                    self.write_set.insert(key, Write::Insert(value));
+                    if let Some(_) = self.root_node.find(&key) {
+                        self.write_set.insert(key, Write::Update(value));
+                    } else {
+                        self.write_set.insert(key, Write::Insert(value));
+                    }
                 }
                 None
             }
@@ -125,7 +129,7 @@ where
 
             for (key, w) in self.write_set.into_iter() {
                 match w {
-                    Write::Insert(value) => self.root_node.insert(&key, value, true),
+                    Write::Insert(value) => self.root_node.insert(&key, value),
                     Write::Update(value) => self.root_node.update(&key, value),
                     Write::Remove => self.root_node.remove(&key),
                 }?;

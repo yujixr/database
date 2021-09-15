@@ -47,10 +47,10 @@ where
         self.get_child(&key).map_or(None, |child| child.1.find(key))
     }
 
-    fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V, N>> {
+    fn insert(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V, N>> {
         match self.get_child_mut(&key) {
             Some(child) => {
-                let result = child.1.insert(&key, value, allow_upsert);
+                let result = child.1.insert(&key, value);
                 child.0 = max(&child.0, &key).clone();
 
                 if let Err(NodeError::Overflow((first_last_key, second_last_key, second_node))) =

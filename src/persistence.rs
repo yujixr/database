@@ -28,7 +28,7 @@ pub fn load<
     let kv_series: Vec<(K, V)> = io::load(&folder_path.join(super::DUMP_FILE_PATH))?;
 
     for (key, value) in kv_series.into_iter() {
-        root_node.insert(&key, value, false)?;
+        root_node.insert(&key, value)?;
     }
 
     match fs::read_dir(&folder_path.join(super::WAL_FOLDER_PATH)) {
@@ -42,7 +42,7 @@ pub fn load<
                 let write_set: HashMap<K, Write<V>> = io::load(&path)?;
                 for (key, w) in write_set {
                     match w {
-                        Write::Insert(value) => root_node.insert(&key, value, true),
+                        Write::Insert(value) => root_node.insert(&key, value),
                         Write::Update(value) => root_node.update(&key, value),
                         Write::Remove => root_node.remove(&key),
                     }?;

@@ -29,8 +29,8 @@ where
         self.root.find(key)
     }
 
-    fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V, N>> {
-        let result = self.root.insert(key, value, allow_upsert);
+    fn insert(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V, N>> {
+        let result = self.root.insert(key, value);
         if let Err(NodeError::Overflow((first_last_key, second_last_key, second_node))) = result {
             let old_root = std::mem::take(self);
             self.root = IntermediateNode::new(vec![

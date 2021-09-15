@@ -30,7 +30,7 @@ where
     V: fmt::Debug,
 {
     fn find(&self, key: &K) -> Option<&V>;
-    fn insert(&mut self, key: &K, value: V, allow_upsert: bool) -> Result<(), NodeError<K, V, N>>;
+    fn insert(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V, N>>;
     fn update(&mut self, key: &K, value: V) -> Result<(), NodeError<K, V, N>>;
     fn remove(&mut self, key: &K) -> Result<(), NodeError<K, V, N>>;
     fn collect(&self) -> Vec<(K, V)>;

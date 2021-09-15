@@ -25,26 +25,9 @@ where
         }
     }
 
-    fn insert(
-        &mut self,
-        key: &K,
-        new_value: V,
-        allow_upsert: bool,
-    ) -> Result<(), NodeError<K, V, N>> {
+    fn insert(&mut self, key: &K, new_value: V) -> Result<(), NodeError<K, V, N>> {
         let r = match self.kv_series.binary_search_by_key(&key, |(key, _)| key) {
-            Ok(idx) => {
-                if allow_upsert {
-                    match self.kv_series.get_mut(idx) {
-                        Some((_, value)) => {
-                            *value = new_value;
-                            Ok(())
-                        }
-                        None => Err(NodeError::Unknown),
-                    }
-                } else {
-                    Err(NodeError::Duplicated)
-                }
-            }
+            Ok(_) => Err(NodeError::Duplicated),
             Err(idx) => {
                 self.kv_series.insert(idx, (key.clone(), new_value));
                 Ok(())
