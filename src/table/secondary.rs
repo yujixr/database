@@ -13,7 +13,7 @@ where
     K: fmt::Debug,
 {
     fn find(&self, key: &Primitive) -> Option<&HashSet<K>>;
-    fn select(&self, value: &V) -> Primitive;
+    fn select(&self, value: V) -> Primitive;
     fn validate(&self, value: &Primitive) -> bool;
     fn append_to(&mut self, key: &Primitive, primary_key: K) -> Result<(), Box<dyn Error>>;
     fn remove_from(&mut self, key: &Primitive, primary_key: K) -> Result<(), Box<dyn Error>>;
@@ -23,7 +23,7 @@ pub struct DefaultSecondaryIndex<K1, V, K2, FnSelector, FnValidator, const N: us
 where
     K1: fmt::Debug,
     K2: fmt::Debug,
-    FnSelector: 'static + Fn(&V) -> Primitive,
+    FnSelector: 'static + Fn(V) -> Primitive,
     FnValidator: 'static + Fn(&Primitive) -> Option<&K2>,
 {
     index: RootNode<K2, HashSet<K1>, N>,
@@ -37,7 +37,7 @@ impl<K1, V, K2, FnSelector, FnValidator, const N: usize>
 where
     K1: 'static + fmt::Debug + Clone,
     K2: 'static + fmt::Debug + Clone + cmp::Ord,
-    FnSelector: 'static + Fn(&V) -> Primitive,
+    FnSelector: 'static + Fn(V) -> Primitive,
     FnValidator: 'static + Fn(&Primitive) -> Option<&K2>,
 {
     pub fn new(selector: FnSelector, validator: FnValidator) -> Self {
@@ -55,7 +55,7 @@ impl<K1, V, K2, FnSelector, FnValidator, const N: usize> SecondaryIndex<K1, V, N
 where
     K1: 'static + fmt::Debug + Clone + cmp::Eq + Hash,
     K2: 'static + fmt::Debug + Clone + cmp::Ord,
-    FnSelector: 'static + Fn(&V) -> Primitive,
+    FnSelector: 'static + Fn(V) -> Primitive,
     FnValidator: 'static + Fn(&Primitive) -> Option<&K2>,
 {
     fn find(&self, key: &Primitive) -> Option<&HashSet<K1>> {
@@ -66,7 +66,7 @@ where
         }
     }
 
-    fn select(&self, value: &V) -> Primitive {
+    fn select(&self, value: V) -> Primitive {
         (self.selector)(value)
     }
 

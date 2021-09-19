@@ -29,7 +29,7 @@ where
                 match w {
                     Write::Insert(value) => {
                         for (_, secondary) in self.table.secondaries.iter_mut() {
-                            let key = secondary.select(&value);
+                            let key = secondary.select(value.clone());
                             secondary.append_to(&key, primary_key.clone())?;
                         }
                         self.table.primary.insert(&primary_key, value)
@@ -42,8 +42,8 @@ where
                             .ok_or(TransactionError::Unknown)?;
 
                         for (_, secondary) in self.table.secondaries.iter_mut() {
-                            let old_key = secondary.select(&old_value);
-                            let new_key = secondary.select(&value);
+                            let old_key = secondary.select(old_value.clone());
+                            let new_key = secondary.select(value.clone());
                             secondary.remove_from(&old_key, primary_key.clone())?;
                             secondary.append_to(&new_key, primary_key.clone())?;
                         }
@@ -58,7 +58,7 @@ where
                             .ok_or(TransactionError::Unknown)?;
 
                         for (_, secondary) in self.table.secondaries.iter_mut() {
-                            let old_key = secondary.select(&old_value);
+                            let old_key = secondary.select(old_value.clone());
                             secondary.remove_from(&old_key, primary_key.clone())?;
                         }
 

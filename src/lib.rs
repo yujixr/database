@@ -7,7 +7,7 @@ mod transaction;
 
 pub use node::{Node, RootNode};
 pub use persistence::{dump, load};
-pub use table::{DefaultSecondaryIndex, Table};
+pub use table::{DefaultSecondaryIndex, Primitive, Table};
 pub use transaction::{Request, Transaction};
 
 const WAL_FOLDER_PATH: &str = "commit";
