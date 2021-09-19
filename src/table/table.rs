@@ -1,6 +1,6 @@
 use super::secondary::SecondaryIndex;
 use crate::RootNode;
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 pub struct Table<K, V, const N: usize>
 where
@@ -8,5 +8,5 @@ where
     V: fmt::Debug,
 {
     pub primary: RootNode<K, V, N>,
-    pub secondaries: Vec<Box<dyn SecondaryIndex<K, V, N>>>,
+    pub secondaries: HashMap<String, Box<dyn SecondaryIndex<K, V, N>>>,
 }

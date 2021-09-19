@@ -1,6 +1,6 @@
 use super::io;
 use super::node::{Node, RootNode};
-use super::transaction::WritePrimary;
+use super::transaction::Write;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{collections::HashMap, error::Error, fmt, fs, hash::Hash, path::Path};
 
@@ -39,12 +39,12 @@ pub fn load<
             entries.sort();
 
             for path in entries {
-                let write_set: HashMap<K, WritePrimary<V>> = io::load(&path)?;
+                let write_set: HashMap<K, Write<V>> = io::load(&path)?;
                 for (key, w) in write_set {
                     match w {
-                        WritePrimary::Insert(value) => root_node.insert(&key, value),
-                        WritePrimary::Update(value) => root_node.update(&key, value),
-                        WritePrimary::Remove => root_node.remove(&key),
+                        Write::Insert(value) => root_node.insert(&key, value),
+                        Write::Update(value) => root_node.update(&key, value),
+                        Write::Remove => root_node.remove(&key),
                     }?;
                 }
             }
